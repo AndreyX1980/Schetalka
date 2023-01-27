@@ -1,35 +1,52 @@
-
 package view;
 
 import java.text.DecimalFormat;
 import javax.swing.JOptionPane;
-import model.CalculatorModel;
+import model.CalculatorService;
+import model.Calculator;
 
 public class CalculatorView extends javax.swing.JFrame {
+    private Calculator calc = new CalculatorService();
+
+    private String prevOperand;
+    private String currOperand;
+    private int operator;
 
     /** Creates new form CalculatorView */
     public CalculatorView() {
-        initComponents();
+        this.cleanup();
+        this.initComponents();
     }
 
-    CalculatorModel model = new CalculatorModel();
-    String operand="";
-
     public void getOperand(javax.swing.JButton button){
-        operand+=button.getText();
-        model.setOperand(operand);
-        resultLabel.setText(operand);
+        this.currOperand += button.getText();
+        
+        resultLabel.setText(currOperand);
     }
 
     private void getOperator(int opt){
-        model.setOperator(opt);
-        operand="";
+        this.operator = opt;
+
+        this.prevOperand = this.currOperand;
+        this.currOperand = "";
     }
+
     private void process(){
+        double num1 = Double.valueOf(this.prevOperand);
+        double num2 = Double.valueOf(this.currOperand);
+        
+        dobule result = this.calc.calculate(num1, num2, this.operator);
+        
         DecimalFormat df = new DecimalFormat("#,###.########");
-        model.process();
-        operand = "";
-        resultLabel.setText(df.format(model.getResult())+"");
+        resultLabel.setText(df.format(result)+"");
+
+        this.cleanup();
+    }
+
+    private void cleanup() {
+        this.prevOperand = "";
+        this.currOperand = "";
+        this.operator = -1;
     }
 
     @SuppressWarnings("unchecked")
