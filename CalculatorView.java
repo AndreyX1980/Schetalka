@@ -1,35 +1,84 @@
-
 package view;
 
 import java.text.DecimalFormat;
 import javax.swing.JOptionPane;
-import model.CalculatorModel;
+import model.CalculatorService;
+import model.Calculator;
 
 public class CalculatorView extends javax.swing.JFrame {
+    /**
+     * Так смотри. Я не знаю для кого комент, если что предисловие потом убирешь :)
+     * 
+     * Тут реализован принцип D из SOLID. На русском - это принцип инверсии зависимостей.
+     * Это притянуто за уши, так как я хз как можно было сделать и при этом не сделать "простой"
+     * калькулятор "сложным".
+     * 
+     * Вот так он звучит на умном:
+     * Модули верхнего уровня не должны зависеть от модулей нижнего уровня. И те, и другие должны зависеть от абстракций.
+     * Абстракции не должны зависеть от деталей. Детали должны зависеть от абстракций.
+     * 
+     * Тут модуль верхнего уровня - это CalculatorView.
+     * Модуль нижнего уровня - это CalculatorService.
+     * Абстрация тут - это Calculator.
+     * 
+     * Если перевести, то модули которые управляют логикой приложения, например, такие как форма калькулятора,
+     * не должны зависеть от конкретного кода. Это все потому что, если что то меняется в какой то внутренней
+     * реализации приложения, то тебе по цепочке придется идти до самого верха пока не исправишь все не исправности в зависимостях.
+     * С использованием принципа D из SOLID, мы сообщаем View нашего приложения, что есть некая сущность 
+     * Calculator, которая умеет считать. Тип ты не парся, просто используй ее и все.
+     * Во-первых, это позволяет нам независимо изменять реализацию CalculatorService и не ломать приложение.
+     * Во-вторых, можно подставить любую реализацию интерфейса Calculator и вообще никак не менять саму
+     * форму приложения CalculatorView. Потому что, логика остается всегда прежней.
+     * 
+     * Опять же повторюсь, тут сильно все притянуто за уши. В бою это немного не так работает.
+     * 
+     * Я убрал тут класс CalcualtorModel. Потому что подумал что он не супер полезный выходит. И перенс часть
+     * того что он делал прямо в форму. Можно попробывать сделать красиво и отсавить его как был, но модуль
+     * с калькуляцией результата все равно вытащить в отдельный класс, который наследует интерфейс Calculator.
+     * Мб с точки зрения ООП это будет даже правильней, но тут кажется, что это слишком излишне.
+     * Как говорил Роберт Мартин, "Преджевременные оптимизации - корень зла" :)
+     */
+    private Calculator calc = new CalculatorService();
+
+    private String prevOperand;
+    private String currOperand;
+    private int operator;
 
     /** Creates new form CalculatorView */
     public CalculatorView() {
-        initComponents();
+        this.cleanup();
+        this.initComponents();
     }
 
-    CalculatorModel model = new CalculatorModel();
-    String operand="";
-
     public void getOperand(javax.swing.JButton button){
-        operand+=button.getText();
-        model.setOperand(operand);
-        resultLabel.setText(operand);
+        this.currOperand += button.getText();
+        
+        resultLabel.setText(currOperand);
     }
 
     private void getOperator(int opt){
-        model.setOperator(opt);
-        operand="";
+        this.operator = opt;
+
+        this.prevOperand = this.currOperand;
+        this.currOperand = "";
     }
+
     private void process(){
+        double num1 = Double.valueOf(this.prevOperand);
+        double num2 = Double.valueOf(this.currOperand);
+        
+        dobule result = this.calc.calculate(num1, num2, this.operator);
+        
         DecimalFormat df = new DecimalFormat("#,###.########");
-        model.process();
-        operand = "";
-        resultLabel.setText(df.format(model.getResult())+"");
+        resultLabel.setText(df.format(result)+"");
+
+        this.cleanup();
+    }
+
+    private void cleanup() {
+        this.prevOperand = "";
+        this.currOperand = "";
+        this.operator = -1;
     }
 
     @SuppressWarnings("unchecked")
